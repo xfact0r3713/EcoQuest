@@ -15,7 +15,7 @@ arrowThickness = 0.05
 arrowSize = 0.1
 
 def initIslandSystem(pos, width, height):
-    with dpg.window(tag = "islandWindow", no_scrollbar = True, pos = pos, width = width, height = height, no_move = True, no_resize = True, no_collapse = True, no_title_bar = True, no_close = True) as islandWindow:
+    with dpg.window(tag = "islandWindow", no_scrollbar = True, pos = pos, width = width, height = height, no_move = True, no_resize = True, no_collapse = True, no_title_bar = True, no_close = True):
         with dpg.plot(tag = "islandPlot", pos = (0,0), width = width, height = height, no_mouse_pos = True, no_box_select = True, no_menus = True, equal_aspects = True):
             xAxis = dpg.add_plot_axis(dpg.mvXAxis, no_tick_marks = True, no_tick_labels = True, no_gridlines = True)
             dpg.set_axis_limits_constraints(xAxis, min(islandPositions, key = lambda x: x[0])[0] + islandPlotPadding, max(islandPositions, key = lambda x: x[0])[0] + islandPlotPadding) 
@@ -44,5 +44,5 @@ def initIslandSystem(pos, width, height):
                     dpg.draw_line(islandPositions[node // 2 + prevLayerNode], islandPositions[node + nextLayerNode], thickness = arrowThickness)
                 
                 prevLayerNode = nextLayerNode
-                nextLayerNode += layerSize          
+                nextLayerNode += layerSize
     
