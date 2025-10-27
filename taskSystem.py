@@ -8,6 +8,7 @@ Created on Sun Oct 19 15:57:52 2025
 import math
 import dearpygui.dearpygui as dpg
 import themes
+import greenPointsSystem as gps
 
 taskHeight = 100
 taskSpacing = 5
@@ -46,10 +47,12 @@ def claimTask(sender, app_data, user_data):
     
 
 class Task:
-    def __init__(self, maxValue = math.inf, currentValue = 0, taskMessage = ""):
+    def __init__(self, maxValue = math.inf, currentValue = 0, taskMessage = "", taskWorth = 0):
         self.maxValue = maxValue
         self.currentValue = currentValue
-        self.taskMessage = taskMessage
+        
+        self.taskMessage = taskMessage + ' Reward: ' + str(taskWorth) + ' green points'
+        self.taskWorth = taskWorth
         
         self.progressBar = 0
         self.claimReward = 0
@@ -61,7 +64,8 @@ class Task:
     def createTask(self, index):
         with dpg.child_window(parent = 'taskWindow', border = False, pos = (0, index * (taskHeight + taskSpacing)), no_scrollbar = True, height = taskHeight, width = taskWidth) as self.childWindow:
             self.progressBar = dpg.add_progress_bar(default_value = self.currentValue / self.maxValue, width = taskWidth - taskWidth / 10, height = taskHeight, pos = (0, 0), drop_callback = dropCallback, user_data = index)
-                
+            dpg.bind_item_theme(self.progressBar, themes.roundCornersTheme)
+            
             self.messageText = dpg.add_text(self.taskMessage + ' - ' + str(self.currentValue) + '/' + str(self.maxValue), wrap = taskWidth, pos = (15,taskHeight / 2 - 30)) 
             
             with dpg.drag_payload(parent = self.progressBar, drag_data = index, show = True) as self.dragPayload:
@@ -69,10 +73,8 @@ class Task:
                 
             dpg.add_button(label = '+', pos = (taskWidth - taskWidth / 10, 0), width = taskWidth / 10, height = taskHeight / 3, callback = incrementTask, user_data = self)
             dpg.add_button(label = '-', pos = (taskWidth - taskWidth / 10, taskHeight / 3), width = taskWidth / 10, height = taskHeight / 3, callback = decrementTask, user_data = self)
-            self.claimReward = dpg.add_button(label = 'Claim', pos = (taskWidth - taskWidth / 10, taskHeight - taskHeight / 3), width = taskWidth / 10, height = taskHeight / 3, show = False, callback = claimTask)
+            dpg.add_button(label = 'Claim', pos = (taskWidth - taskWidth / 10, taskHeight - taskHeight / 3), width = taskWidth / 10, height = taskHeight / 3, show = False, callback = claimTask, user_data = self)
             
-        dpg.bind_item_theme(self.progressBar, themes.roundCornersTheme)
-
     def updateTask(self, task):
         dpg.set_value(self.messageText, self.taskMessage + ' - ' + str(self.currentValue) + '/' + str(self.maxValue))
         dpg.set_value(self.progressBar, self.currentValue / self.maxValue)

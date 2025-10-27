@@ -21,6 +21,7 @@ task.initTaskSystem((0,0), maxWidth / 2, maxHeight)
 
 import islandPathway as island
 island.initIslandSystem((maxWidth / 2, 0), maxWidth / 2,  maxHeight)
+
 for i in range(10):
     task.addTask(task.Task(10, i, str(i)))
 
