@@ -44,7 +44,7 @@ def decrementTask(sender, app_data, user_data):
     user_data.updateTask(user_data)
     
 def claimTask(sender, app_data, user_data):
-    
+    return
 
 class Task:
     def __init__(self, maxValue = math.inf, currentValue = 0, taskMessage = "", taskWorth = 0):

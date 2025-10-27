@@ -10,7 +10,7 @@ import dearpygui.dearpygui as dpg
 greenPointsCount = 0
 lifetimeGreenPointsCount = 0
 
-greenPointsConfirm
+greenPointsConfirm = 0
 spacing = 5
 
 def initGreenPoints(pos, width, height):
