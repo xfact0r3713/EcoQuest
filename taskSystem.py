@@ -6,13 +6,15 @@ Created on Sun Oct 19 15:57:52 2025
 """
 
 import math
-import style
 import dearpygui.dearpygui as dpg
+
+with dpg.theme() as roundCornersTheme:
+    with dpg.theme_component(dpg.mvProgressBar):
+        dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 10, category=dpg.mvThemeCat_Core)
 
 taskHeight = 100
 taskSpacing = 5
 taskWidth = 400
-taskWindow = -1
 
 taskList = list()
     
@@ -34,20 +36,6 @@ class Task:
         self.messageText = 0
         self.childWindow = 0
         
-        # with dpg.child_window(parent = 'taskWindow', show = False, border = False, pos = (0,0), no_scrollbar = True, height = taskHeight, width = taskWidth) as self.childWindow:
-        #     self.progressBar = dpg.add_progress_bar(default_value = currentValue / maxValue, width = taskWidth, height = taskHeight, pos = (0, 0), drop_callback = dropCallback, user_data = self.taskIndex)
-            
-        #     with dpg.drag_payload(parent = self.progressBar, drag_data = self.taskIndex):
-        #         dpg.add_text(taskMessage)
-                
-        #     self.messageText = dpg.add_text(taskMessage + ' - ' + str(self.currentValue) + '/' + str(self.maxValue), wrap = taskWidth, pos = (15,taskHeight / 2 - 30)) 
-        
-        # dpg.bind_item_theme(self.progressBar, style.roundCornersTheme)
-
-    # def updateProgress(self):
-    #     dpg.set_value(self.progressBar, self.currentValue / self.maxValue)
-    #     dpg.set_value(self.messageText, self.taskMessage + ' - ' + str(self.currentValue) + '/' + str(self.maxValue))
-        
 def addTask(task):
     taskList.append(task)
     index = len(taskList) - 1
@@ -62,7 +50,9 @@ def addTask(task):
     
     dpg.bind_item_theme(task.progressBar, style.roundCornersTheme)
 
-def makeTaskWindow(pos, width, height):
-    taskWindow = dpg.add_window(tag = "taskWindow", no_scrollbar = False, pos = pos, width = width, height = height, no_move = True, no_resize = True, no_collapse = True, no_title_bar = True, no_close = True)
-    taskWidth = width
+def initTaskSystem(pos, width, height):
+    global taskWidth, taskHeight
+    
+    dpg.add_window(tag = "taskWindow", no_scrollbar = False, pos = pos, width = width, height = height, no_move = True, no_resize = True, no_collapse = True, no_title_bar = True, no_close = True)
+    taskWidth = width - 18
     taskHeight = height / 8
