@@ -44,7 +44,17 @@ def decrementTask(sender, app_data, user_data):
     user_data.updateTask(user_data)
     
 def claimTask(sender, app_data, user_data):
-    return
+    gps.incrementGreenPoints(user_data.taskWorth)
+    index = dpg.get_item_user_data(user_data.progressBar)
+    
+    taskList.pop(index)
+    dpg.delete_item(user_data.childWindow)
+    del user_data
+    
+    for i in range(index, len(taskList)):
+        dpg.configure_item(taskList[i].dragPayload, drag_data = i)
+        dpg.configure_item(taskList[i].progressBar, user_data = i)
+        dpg.configure_item(taskList[i].childWindow, pos = (0, i * (taskHeight + taskSpacing)))
 
 class Task:
     def __init__(self, maxValue = math.inf, currentValue = 0, taskMessage = "", taskWorth = 0):
@@ -73,7 +83,7 @@ class Task:
                 
             dpg.add_button(label = '+', pos = (taskWidth - taskWidth / 10, 0), width = taskWidth / 10, height = taskHeight / 3, callback = incrementTask, user_data = self)
             dpg.add_button(label = '-', pos = (taskWidth - taskWidth / 10, taskHeight / 3), width = taskWidth / 10, height = taskHeight / 3, callback = decrementTask, user_data = self)
-            dpg.add_button(label = 'Claim', pos = (taskWidth - taskWidth / 10, taskHeight - taskHeight / 3), width = taskWidth / 10, height = taskHeight / 3, show = False, callback = claimTask, user_data = self)
+            self.claimReward = dpg.add_button(label = 'Claim', pos = (taskWidth - taskWidth / 10, taskHeight - taskHeight / 3), width = taskWidth / 10, height = taskHeight / 3, show = False, callback = claimTask, user_data = self)
             
     def updateTask(self, task):
         dpg.set_value(self.messageText, self.taskMessage + ' - ' + str(self.currentValue) + '/' + str(self.maxValue))

@@ -6,9 +6,13 @@ Created on Mon Oct 20 20:48:07 2025
 """
 
 import dearpygui.dearpygui as dpg
+import greenPointsSystem as gps
 
 islandPositions = [(0,0), (-2,1), (2,1), (-3,2), (-1,2), (1,2), (3,2)]
-islandPlotPadding = 0
+activatedIslands = [True, False, False, False, False, False, False]
+islandPrice = [0, 0, 0, 0, 0, 0, 0]
+
+islandPlotPadding = 1
 islandLayers = 3
 
 arrowThickness = 0.05
@@ -18,9 +22,9 @@ def initIslandSystem(pos, width, height):
     with dpg.window(tag = "islandWindow", no_scrollbar = True, pos = pos, width = width, height = height, no_move = True, no_resize = True, no_collapse = True, no_title_bar = True, no_close = True):
         with dpg.plot(tag = "islandPlot", pos = (0,0), width = width, height = height, no_mouse_pos = True, no_box_select = True, no_menus = True, equal_aspects = True):
             xAxis = dpg.add_plot_axis(dpg.mvXAxis, no_tick_marks = True, no_tick_labels = True, no_gridlines = True)
-            dpg.set_axis_limits_constraints(xAxis, min(islandPositions, key = lambda x: x[0])[0] + islandPlotPadding, max(islandPositions, key = lambda x: x[0])[0] + islandPlotPadding) 
+            dpg.set_axis_limits_constraints(xAxis, min(islandPositions, key = lambda x: x[0])[0] - islandPlotPadding, max(islandPositions, key = lambda x: x[0])[0] + islandPlotPadding) 
             yAxis = dpg.add_plot_axis(dpg.mvYAxis, no_tick_marks = True, no_tick_labels = True, no_gridlines = True)
-            dpg.set_axis_limits_constraints(yAxis, min(islandPositions, key = lambda x: x[1])[1] + islandPlotPadding, max(islandPositions, key = lambda x: x[1])[1] + islandPlotPadding)
+            dpg.set_axis_limits_constraints(yAxis, min(islandPositions, key = lambda x: x[1])[1] - islandPlotPadding, max(islandPositions, key = lambda x: x[1])[1] + islandPlotPadding)
             
             prevLayerNode = 0
             nextLayerNode = 1
@@ -45,4 +49,36 @@ def initIslandSystem(pos, width, height):
                 
                 prevLayerNode = nextLayerNode
                 nextLayerNode += layerSize
+
+def attemptIslandUnlock(index):
+    if index == 0:
+        return
     
+    global activatedIslands
+    
+    islandLayerIndex = index - (1 << (index + 1).bit_length() - 1) + 1
+    prevIslandLayerIndex = islandLayerIndex // 2 + (1 << (index + 1).bit_length() - 2) - 1
+    
+    if activatedIslands[prevIslandLayerIndex]:
+        def succecfulIslandUnlock():
+            p1 = islandPositions[index]
+            p3 = islandPositions[prevIslandLayerIndex]
+            p2 = (p1[0] + p3[0]) / 2, (p1[1] + p3[1]) / 2
+            pLeft = (p3[0] - p1[0] - p3[1] + p1[1]) * arrowSize + p2[0], (p3[0] - p1[0] + p3[1] - p1[1]) * arrowSize + p2[1]
+            pRight = (p3[0] - p1[0] + p3[1] - p1[1]) * arrowSize + p2[0], (p3[1] - p1[1] - p3[0] + p1[0]) * arrowSize + p2[1]
+            
+            dpg.draw_circle(p1, arrowThickness / 4, fill = (0,255,0), parent = 'islandPlot')
+            dpg.draw_circle(p2, arrowThickness / 4, fill = (0,255,0), parent = 'islandPlot')
+            dpg.draw_circle(p3, arrowThickness / 4, fill = (0,255,0), parent = 'islandPlot')
+            dpg.draw_circle(pRight, arrowThickness / 2, fill = (0,255,0), parent = 'islandPlot')
+            dpg.draw_circle(pLeft, arrowThickness / 2, fill = (0,255,0), parent = 'islandPlot')
+            
+            dpg.draw_line(p2, pRight, thickness = arrowThickness / 2 , color = (0,255,0), parent = 'islandPlot')  
+            dpg.draw_line(p2, pLeft, thickness = arrowThickness / 2, color = (0,255,0), parent = 'islandPlot')
+            dpg.draw_line(islandPositions[prevIslandLayerIndex], islandPositions[index], thickness = arrowThickness / 2, color = (0,255,0), parent = 'islandPlot')
+            
+            activatedIslands[index] = True
+            
+        gps.decrementGreenPoints(islandPrice[index], succecfulIslandUnlock)
+        
+        

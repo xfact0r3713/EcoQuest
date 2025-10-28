@@ -22,6 +22,9 @@ task.initTaskSystem((0,0), maxWidth / 2, maxHeight)
 import islandPathway as island
 island.initIslandSystem((maxWidth / 2, 0), maxWidth / 2,  maxHeight)
 
+import greenPointsSystem as gps
+gps.initGreenPoints((maxWidth / 2 - maxWidth / 10, maxHeight / 2 - maxHeight / 10), maxWidth / 5, maxHeight / 5)
+
 for i in range(10):
     task.addTask(task.Task(10, i, str(i)))
 
