@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Wed Oct 29 18:43:28 2025
-
-@author: Xfact
-"""
 
 import random as rand
 
@@ -42,12 +37,14 @@ hardTasks = ['No Car day',
              'Volunteer for local cleanup',
              'Create a small garden']
 
+#Makes random task
 def generateTask():
     randNumber = rand.randint(1,10)
     taskAmount = 1
     taskMessage = ''
     taskReward = 1
     
+    #Generate tasks and how much each amount of the task is worth,a dn assign random task amount
     if randNumber < 2:
         taskMessage = rand.choice(hardTasks)
         taskReward = 3
@@ -59,7 +56,8 @@ def generateTask():
     else:
         taskMessage = rand.choice(hardTasks)
         taskAmount = rand.randint(1,7)
-        
+    
+    #Return data
     return taskMessage, taskAmount, taskReward * taskAmount
         
         
