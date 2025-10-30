@@ -7,18 +7,35 @@ Created on Mon Oct 20 20:48:07 2025
 
 import dearpygui.dearpygui as dpg
 import greenPointsSystem as gps
+import taskSystem as task
 
 islandPositions = [(0,0), (-2,1), (2,1), (-3,2), (-1,2), (1,2), (3,2)]
 activatedIslands = [True, False, False, False, False, False, False]
-islandPrice = [0, 0, 0, 0, 0, 0, 0]
+islandPrice = [0, 15, 30, 90, 270, 810, 2430]
+islandMultipliers = [1, 2, 2, 3, 3, 3, 3]
 
 islandPlotPadding = 1
 islandLayers = 3
+islandSize = 0.4
 
-arrowThickness = 0.05
+arrowThickness = 0.02
 arrowSize = 0.1
 
+def islandClick(sender, app_data):
+    mousePos = dpg.get_plot_mouse_pos()
+    
+    for i, x in enumerate(islandPositions):
+        if abs(mousePos[0] - x[0]) < islandSize / 2 and abs(mousePos[1] - x[1]) < islandSize / 2:
+            attemptIslandUnlock(i)
+            return
+            
+
 def initIslandSystem(pos, width, height):
+    with dpg.texture_registry():
+        for i in range(1, len(islandPositions) + 1):
+            imageWidth, imageHeight, imageChannels, imageData = dpg.load_image('Island Images\Island' + str(i) + '.png')
+            dpg.add_static_texture(imageWidth, imageHeight, imageData, tag = 'island' + str(i - 1))
+    
     with dpg.window(tag = "islandWindow", no_scrollbar = True, pos = pos, width = width, height = height, no_move = True, no_resize = True, no_collapse = True, no_title_bar = True, no_close = True):
         with dpg.plot(tag = "islandPlot", pos = (0,0), width = width, height = height, no_mouse_pos = True, no_box_select = True, no_menus = True, equal_aspects = True):
             xAxis = dpg.add_plot_axis(dpg.mvXAxis, no_tick_marks = True, no_tick_labels = True, no_gridlines = True)
@@ -28,10 +45,12 @@ def initIslandSystem(pos, width, height):
             
             prevLayerNode = 0
             nextLayerNode = 1
+            
             for layer in range(1, islandLayers):
                 layerSize = 2**layer
                 for node in range(layerSize):
-                    p1 = islandPositions[node + nextLayerNode]
+                    index  = node + nextLayerNode
+                    p1 = islandPositions[index]
                     p3 = islandPositions[node // 2 + prevLayerNode]
                     p2 = (p1[0] + p3[0]) / 2, (p1[1] + p3[1]) / 2
                     pLeft = (p3[0] - p1[0] - p3[1] + p1[1]) * arrowSize + p2[0], (p3[0] - p1[0] + p3[1] - p1[1]) * arrowSize + p2[1]
@@ -45,12 +64,23 @@ def initIslandSystem(pos, width, height):
                     
                     dpg.draw_line(p2, pRight, thickness = arrowThickness)  
                     dpg.draw_line(p2, pLeft, thickness = arrowThickness)
-                    dpg.draw_line(islandPositions[node // 2 + prevLayerNode], islandPositions[node + nextLayerNode], thickness = arrowThickness)
-                
+                    dpg.draw_line(p3, p1, thickness = arrowThickness)
+                    
+                    dpg.draw_text((p1[0] - 0.4, p1[1]), text = 'Green Points Cost: ' + str(islandPrice[index]), tag = 'islandPriceTag' + str(index), size = 0.1, color = (255,0,0))
+                    
                 prevLayerNode = nextLayerNode
                 nextLayerNode += layerSize
-
-def attemptIslandUnlock(index):
+                
+            for i in range(len(islandPositions)):
+                dpg.add_image_series("island" + str(i), (islandPositions[i][0] - islandSize / 2, islandPositions[i][1] - islandSize / 2), (islandPositions[i][0] + islandSize / 2, islandPositions[i][1] + islandSize / 2), parent = yAxis)
+            
+                    
+        with dpg.item_handler_registry(tag = 'islandClickRegistry'):
+            dpg.add_item_clicked_handler(callback = islandClick)
+            
+        dpg.bind_item_handler_registry('islandPlot', 'islandClickRegistry')
+            
+def attemptIslandUnlock(index, loadingStuff = False):
     if index == 0:
         return
     
@@ -59,7 +89,7 @@ def attemptIslandUnlock(index):
     islandLayerIndex = index - (1 << (index + 1).bit_length() - 1) + 1
     prevIslandLayerIndex = islandLayerIndex // 2 + (1 << (index + 1).bit_length() - 2) - 1
     
-    if activatedIslands[prevIslandLayerIndex]:
+    if (activatedIslands[prevIslandLayerIndex] and not activatedIslands[index]) or loadingStuff:
         def succecfulIslandUnlock():
             p1 = islandPositions[index]
             p3 = islandPositions[prevIslandLayerIndex]
@@ -67,18 +97,27 @@ def attemptIslandUnlock(index):
             pLeft = (p3[0] - p1[0] - p3[1] + p1[1]) * arrowSize + p2[0], (p3[0] - p1[0] + p3[1] - p1[1]) * arrowSize + p2[1]
             pRight = (p3[0] - p1[0] + p3[1] - p1[1]) * arrowSize + p2[0], (p3[1] - p1[1] - p3[0] + p1[0]) * arrowSize + p2[1]
             
-            dpg.draw_circle(p1, arrowThickness / 4, fill = (0,255,0), parent = 'islandPlot')
-            dpg.draw_circle(p2, arrowThickness / 4, fill = (0,255,0), parent = 'islandPlot')
-            dpg.draw_circle(p3, arrowThickness / 4, fill = (0,255,0), parent = 'islandPlot')
-            dpg.draw_circle(pRight, arrowThickness / 2, fill = (0,255,0), parent = 'islandPlot')
-            dpg.draw_circle(pLeft, arrowThickness / 2, fill = (0,255,0), parent = 'islandPlot')
+            dpg.draw_circle(p1, arrowThickness / 4, fill = (0,130,0), parent = 'islandPlot')
+            dpg.draw_circle(p2, arrowThickness / 4, fill = (0,130,0), parent = 'islandPlot')
+            dpg.draw_circle(p3, arrowThickness / 4, fill = (0,130,0), parent = 'islandPlot')
+            dpg.draw_circle(pRight, arrowThickness / 2, fill = (0,130,0), parent = 'islandPlot')
+            dpg.draw_circle(pLeft, arrowThickness / 2, fill = (0,130,0), parent = 'islandPlot')
             
-            dpg.draw_line(p2, pRight, thickness = arrowThickness / 2 , color = (0,255,0), parent = 'islandPlot')  
-            dpg.draw_line(p2, pLeft, thickness = arrowThickness / 2, color = (0,255,0), parent = 'islandPlot')
-            dpg.draw_line(islandPositions[prevIslandLayerIndex], islandPositions[index], thickness = arrowThickness / 2, color = (0,255,0), parent = 'islandPlot')
+            dpg.draw_line(p2, pRight, thickness = arrowThickness / 2 , color = (0,130,0), parent = 'islandPlot')  
+            dpg.draw_line(p2, pLeft, thickness = arrowThickness / 2, color = (0,130,0), parent = 'islandPlot')
+            dpg.draw_line(islandPositions[prevIslandLayerIndex], islandPositions[index], thickness = arrowThickness / 2, color = (0,130,0), parent = 'islandPlot')
             
+            gps.addGreenPointsMultiplier(islandMultipliers[index])
             activatedIslands[index] = True
             
-        gps.decrementGreenPoints(islandPrice[index], succecfulIslandUnlock)
+            task.maxTaskAmount += 2
+            task.updateTaskAmount()
+            
+            dpg.delete_item('islandPriceTag' + str(index))
+            
+        if loadingStuff:
+            succecfulIslandUnlock()
+        else:
+            gps.decrementGreenPoints(islandPrice[index], succecfulIslandUnlock)
         
         

@@ -5,14 +5,15 @@ Created on Sun Oct 19 15:57:52 2025
 @author: Xfact
 """
 
-import math
 import dearpygui.dearpygui as dpg
 import themes
 import greenPointsSystem as gps
+import taskGenerater as tskGen
 
 taskHeight = 100
 taskSpacing = 5
 taskWidth = 400
+maxTaskAmount = 2
 
 taskList = list()
 
@@ -55,13 +56,15 @@ def claimTask(sender, app_data, user_data):
         dpg.configure_item(taskList[i].dragPayload, drag_data = i)
         dpg.configure_item(taskList[i].progressBar, user_data = i)
         dpg.configure_item(taskList[i].childWindow, pos = (0, i * (taskHeight + taskSpacing)))
+    
+    updateTaskAmount()
 
 class Task:
-    def __init__(self, maxValue = math.inf, currentValue = 0, taskMessage = "", taskWorth = 0):
+    def __init__(self, maxValue = 0, currentValue = 0, taskMessage = "", taskWorth = 0):
         self.maxValue = maxValue
         self.currentValue = currentValue
         
-        self.taskMessage = taskMessage + ' Reward: ' + str(taskWorth) + ' green points'
+        self.taskMessage = taskMessage
         self.taskWorth = taskWorth
         
         self.progressBar = 0
@@ -74,19 +77,20 @@ class Task:
     def createTask(self, index):
         with dpg.child_window(parent = 'taskWindow', border = False, pos = (0, index * (taskHeight + taskSpacing)), no_scrollbar = True, height = taskHeight, width = taskWidth) as self.childWindow:
             self.progressBar = dpg.add_progress_bar(default_value = self.currentValue / self.maxValue, width = taskWidth - taskWidth / 10, height = taskHeight, pos = (0, 0), drop_callback = dropCallback, user_data = index)
-            dpg.bind_item_theme(self.progressBar, themes.roundCornersTheme)
             
-            self.messageText = dpg.add_text(self.taskMessage + ' - ' + str(self.currentValue) + '/' + str(self.maxValue), wrap = taskWidth, pos = (15,taskHeight / 2 - 30)) 
+            self.messageText = dpg.add_text(self.taskMessage + ' Reward: ' + str(self.taskWorth) + ' green points - ' + str(self.currentValue) + '/' + str(self.maxValue), wrap = taskWidth - taskWidth / 10, pos = (15,taskHeight / 2 - 30)) 
             
             with dpg.drag_payload(parent = self.progressBar, drag_data = index, show = True) as self.dragPayload:
                 dpg.add_text(self.taskMessage)
                 
             dpg.add_button(label = '+', pos = (taskWidth - taskWidth / 10, 0), width = taskWidth / 10, height = taskHeight / 3, callback = incrementTask, user_data = self)
             dpg.add_button(label = '-', pos = (taskWidth - taskWidth / 10, taskHeight / 3), width = taskWidth / 10, height = taskHeight / 3, callback = decrementTask, user_data = self)
-            self.claimReward = dpg.add_button(label = 'Claim', pos = (taskWidth - taskWidth / 10, taskHeight - taskHeight / 3), width = taskWidth / 10, height = taskHeight / 3, show = False, callback = claimTask, user_data = self)
-            
+            self.claimReward = dpg.add_button(label = 'Claim', pos = (taskWidth - taskWidth / 10, taskHeight - taskHeight / 3), width = taskWidth / 10, height = taskHeight / 3, show = self.currentValue >= self.maxValue, callback = claimTask, user_data = self)
+        
+        dpg.bind_item_theme(self.childWindow, themes.mainTheme)    
+        
     def updateTask(self, task):
-        dpg.set_value(self.messageText, self.taskMessage + ' - ' + str(self.currentValue) + '/' + str(self.maxValue))
+        dpg.set_value(self.messageText, self.taskMessage + ' Reward: ' + str(self.taskWorth) + ' green points - ' + str(self.currentValue) + '/' + str(self.maxValue))
         dpg.set_value(self.progressBar, self.currentValue / self.maxValue)
         
         if self.maxValue <= self.currentValue:
@@ -104,5 +108,10 @@ def initTaskSystem(pos, width, height):
     dpg.add_window(tag = "taskWindow", no_scrollbar = False, pos = pos, width = width, height = height, no_move = True, no_resize = True, no_collapse = True, no_title_bar = True, no_close = True)
     taskWidth = width - 18
     taskHeight = height / 8
+    
+def updateTaskAmount():
+    while len(taskList) < maxTaskAmount:
+        tsk = tskGen.generateTask()
+        addTask(Task(tsk[1], 0, tsk[0], tsk[2]))
     
 
